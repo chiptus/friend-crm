@@ -1,0 +1,77 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand-50: oklch(0.97 0.02 260);
+  --color-brand-100: oklch(0.93 0.04 260);
+  --color-brand-200: oklch(0.87 0.07 260);
+  --color-brand-300: oklch(0.78 0.11 260);
+  --color-brand-400: oklch(0.68 0.15 260);
+  --color-brand-500: oklch(0.58 0.19 260);
+  --color-brand-600: oklch(0.50 0.20 260);
+  --color-brand-700: oklch(0.42 0.17 260);
+  --color-brand-800: oklch(0.35 0.14 260);
+  --color-brand-900: oklch(0.28 0.10 260);
+  --color-surface: oklch(0.985 0.002 260);
+  --color-surface-raised: oklch(1 0 0);
+  --color-status-ok: oklch(0.72 0.19 155);
+  --color-status-overdue: oklch(0.63 0.21 25);
+}
+
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes dialog-out {
+  from {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(16px) scale(0.96);
+  }
+}
+
+@keyframes backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+dialog[open] {
+  animation: dialog-in 0.2s ease-out;
+}
+
+dialog::backdrop {
+  background: oklch(0.2 0 0 / 0.4);
+  backdrop-filter: blur(4px);
+  animation: backdrop-in 0.15s ease-out;
+}
+
+@keyframes fab-in {
+  from {
+    opacity: 0;
+    transform: scale(0) rotate(-90deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@keyframes popover-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
