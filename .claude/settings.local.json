@@ -15,7 +15,8 @@
       "Bash(node:*)",
       "Bash(pnpm remove:*)",
       "Bash(git worktree add:*)",
-      "Bash(pnpm typecheck:*)"
+      "Bash(pnpm typecheck:*)",
+      "Bash(npx tsc:*)"
     ]
   }
 }

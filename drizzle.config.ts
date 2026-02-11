@@ -4,7 +4,4 @@ export default defineConfig({
   schema: './src/server/schema.ts',
   out: './drizzle',
   dialect: 'sqlite',
-  dbCredentials: {
-    url: './data/friend-crm.db',
-  },
 })

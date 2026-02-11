@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import { tanstackStart } from '@tanstack/react-start/plugin/vite'
+import { cloudflare } from '@cloudflare/vite-plugin'
 import viteReact from '@vitejs/plugin-react'
 import viteTsConfigPaths from 'vite-tsconfig-paths'
 import tailwindcss from '@tailwindcss/vite'
@@ -8,10 +9,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 export default defineConfig({
   server: { port: 3000 },
   plugins: [
+    tailwindcss(),
+    viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
+    cloudflare({ viteEnvironment: { name: 'ssr' } }),
     tanstackStart(),
     viteReact(),
-    viteTsConfigPaths({ projects: ['./tsconfig.json'] }),
-    tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'logo192.png', 'logo512.png'],

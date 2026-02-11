@@ -1,41 +1,30 @@
-import Database from 'better-sqlite3'
-import { drizzle } from 'drizzle-orm/better-sqlite3'
-import { sql } from 'drizzle-orm'
-import * as schema from '../src/server/schema'
+/**
+ * D1 Database Migration
+ *
+ * With Cloudflare D1, migrations work differently than local SQLite:
+ *
+ * 1. Generate migrations from schema changes:
+ *    pnpm db:generate
+ *
+ * 2. Apply migrations locally (dev):
+ *    pnpm db:migrate:local
+ *
+ * 3. Apply migrations to production D1:
+ *    pnpm db:migrate:prod
+ *
+ * The Cloudflare Vite plugin handles local D1 during `pnpm dev` automatically.
+ */
 
-const sqlite = new Database('./data/friend-crm.db')
-sqlite.pragma('journal_mode = WAL')
+console.log(`D1 Migration Guide:
 
-const db = drizzle(sqlite, { schema })
+1. Generate migration SQL from schema:
+   pnpm db:generate
 
-// Create tables if they don't exist
-db.run(sql`
-  CREATE TABLE IF NOT EXISTS friends (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    frequency_days INTEGER DEFAULT 7,
-    last_contacted_at TEXT
-  )
+2. Apply to local D1 (for testing):
+   pnpm db:migrate:local
+
+3. Apply to production D1:
+   pnpm db:migrate:prod
+
+See: https://developers.cloudflare.com/d1/reference/migrations/
 `)
-
-db.run(sql`
-  CREATE TABLE IF NOT EXISTS interactions (
-    id TEXT PRIMARY KEY,
-    friend_id TEXT REFERENCES friends(id),
-    type TEXT NOT NULL CHECK(type IN ('call', 'message', 'meet')),
-    occurred_at TEXT NOT NULL,
-    notes TEXT
-  )
-`)
-
-db.run(sql`
-  CREATE TABLE IF NOT EXISTS push_subscriptions (
-    id TEXT PRIMARY KEY,
-    endpoint TEXT UNIQUE,
-    p256dh TEXT,
-    auth TEXT
-  )
-`)
-
-console.log('Database migrated successfully.')
-sqlite.close()

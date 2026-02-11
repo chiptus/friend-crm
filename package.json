@@ -7,13 +7,16 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio",
-    "migrate": "tsx scripts/migrate.ts"
+    "typecheck": "tsc --noEmit",
+    "deploy": "pnpm build && wrangler deploy",
+    "cf-typegen": "wrangler types",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate:local": "wrangler d1 migrations apply friend-crm-db --local",
+    "db:migrate:prod": "wrangler d1 migrations apply friend-crm-db --remote",
+    "db:studio": "drizzle-kit studio"
   },
   "pnpm": {
     "onlyBuiltDependencies": [
-      "better-sqlite3",
       "esbuild"
     ]
   },
@@ -24,7 +27,6 @@
     "@tanstack/react-router-ssr-query": "^1.131.7",
     "@tanstack/react-start": "^1.132.0",
     "@tanstack/router-plugin": "^1.132.0",
-    "better-sqlite3": "^12.6.2",
     "better-auth": "^1.4.18",
     "drizzle-orm": "^0.45.1",
     "lucide-react": "^0.561.0",
@@ -39,7 +41,6 @@
     "@tanstack/devtools-vite": "^0.3.11",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/react": "^16.2.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.2",
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",

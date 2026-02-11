@@ -2,7 +2,7 @@ import { createServerFn } from '@tanstack/react-start'
 import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod/v4'
 import { eq, and, asc, desc } from 'drizzle-orm'
-import { db } from './db'
+import { getDb } from './db'
 import { friends, interactions } from './schema'
 import { auth } from './auth'
 
@@ -24,25 +24,18 @@ export const getSession = createServerFn({ method: 'GET' }).handler(
 export const getFriends = createServerFn({ method: 'GET' }).handler(
   async () => {
     const user = await requireUser()
+    const db = getDb()
 
-    const allFriends = db
+    const allFriends = await db
       .select()
       .from(friends)
       .where(eq(friends.userId, user.id))
       .orderBy(asc(friends.lastContactedAt))
-      .all()
 
-    const friendIds = allFriends.map((f) => f.id)
-
-    const recentInteractions =
-      friendIds.length > 0
-        ? db
-            .select()
-            .from(interactions)
-            .orderBy(desc(interactions.occurredAt))
-            .all()
-            .filter((i) => i.friendId && friendIds.includes(i.friendId))
-        : []
+    const recentInteractions = await db
+      .select()
+      .from(interactions)
+      .orderBy(desc(interactions.occurredAt))
 
     const interactionsByFriend = new Map<string, typeof recentInteractions>()
     for (const i of recentInteractions) {
@@ -68,15 +61,14 @@ export const addFriend = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) => addFriendSchema.parse(data))
   .handler(async ({ data }) => {
     const user = await requireUser()
+    const db = getDb()
     const id = crypto.randomUUID()
-    db.insert(friends)
-      .values({
-        id,
-        userId: user.id,
-        name: data.name,
-        frequencyDays: data.frequencyDays,
-      })
-      .run()
+    await db.insert(friends).values({
+      id,
+      userId: user.id,
+      name: data.name,
+      frequencyDays: data.frequencyDays,
+    })
     return { id }
   })
 
@@ -91,35 +83,32 @@ export const logInteraction = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) => logInteractionSchema.parse(data))
   .handler(async ({ data }) => {
     const user = await requireUser()
+    const db = getDb()
     const occurredAt = data.occurredAt || new Date().toISOString()
     const id = crypto.randomUUID()
 
     // Verify the friend belongs to this user
-    const friend = db
+    const [friend] = await db
       .select()
       .from(friends)
       .where(and(eq(friends.id, data.friendId), eq(friends.userId, user.id)))
-      .get()
 
     if (!friend) throw new Error('Friend not found')
 
-    // Single transaction: insert interaction + update last_contacted_at
-    db.transaction((tx) => {
-      tx.insert(interactions)
-        .values({
-          id,
-          friendId: data.friendId,
-          type: data.type,
-          occurredAt,
-          notes: data.notes ?? null,
-        })
-        .run()
-
-      tx.update(friends)
+    // Atomic batch: insert interaction + update last_contacted_at
+    await db.batch([
+      db.insert(interactions).values({
+        id,
+        friendId: data.friendId,
+        type: data.type,
+        occurredAt,
+        notes: data.notes ?? null,
+      }),
+      db
+        .update(friends)
         .set({ lastContactedAt: occurredAt })
-        .where(eq(friends.id, data.friendId))
-        .run()
-    })
+        .where(eq(friends.id, data.friendId)),
+    ])
 
     return { id }
   })
