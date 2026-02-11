@@ -1,21 +1,19 @@
-import { HeadContent, Outlet, Scripts, createRootRoute } from '@tanstack/react-router'
+import { HeadContent, Scripts, createRootRoute } from "@tanstack/react-router";
 
-import appCss from '../styles.css?url'
+import appCss from "../styles.css?url";
 
 export const Route = createRootRoute({
   head: () => ({
     meta: [
-      { charSet: 'utf-8' },
-      { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-      { title: 'Friend CRM' },
-      { name: 'theme-color', content: '#6366f1' },
+      { charSet: "utf-8" },
+      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { title: "Friend CRM" },
+      { name: "theme-color", content: "#6366f1" },
     ],
-    links: [
-      { rel: 'stylesheet', href: appCss },
-    ],
+    links: [{ rel: "stylesheet", href: appCss }],
   }),
   shellComponent: RootDocument,
-})
+});
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
@@ -28,5 +26,5 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <Scripts />
       </body>
     </html>
-  )
+  );
 }

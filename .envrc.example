@@ -1,0 +1,4 @@
+export BETTER_AUTH_SECRET=change-me-to-a-random-32-char-string
+export BETTER_AUTH_URL=http://localhost:3000
+export GOOGLE_CLIENT_ID=your-google-client-id
+export GOOGLE_CLIENT_SECRET=your-google-client-secret

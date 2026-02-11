@@ -1,18 +1,27 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, redirect, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
-import { getFriends, addFriend, logInteraction } from '../server/functions'
-import { Plus } from 'lucide-react'
+import { getFriends, getSession, addFriend, logInteraction } from '../server/functions'
+import { signOut } from '@/lib/auth-client'
+import { Plus, LogOut } from 'lucide-react'
 import { AddFriendDialog } from '@/components/AddFriendDialog'
 import { FriendCard } from '@/components/FriendCard'
 import { EmptyState } from '@/components/EmptyState'
 
 export const Route = createFileRoute('/')({
+  beforeLoad: async () => {
+    const session = await getSession()
+    if (!session) {
+      throw redirect({ to: '/login' })
+    }
+    return { session }
+  },
   loader: () => getFriends(),
   component: HomeComponent,
 })
 
 function HomeComponent() {
   const friends = Route.useLoaderData()
+  const { session } = Route.useRouteContext()
   const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
 
@@ -23,6 +32,11 @@ function HomeComponent() {
 
   const handleLogInteraction = async (friendId: string, type: 'call' | 'message' | 'meet', occurredAt?: string, notes?: string) => {
     await logInteraction({ data: { friendId, type, occurredAt, notes: notes || undefined } })
+    router.invalidate()
+  }
+
+  const handleSignOut = async () => {
+    await signOut()
     router.invalidate()
   }
 
@@ -39,14 +53,33 @@ function HomeComponent() {
                 : 'Keep in touch with the people who matter'}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setDialogOpen(true)}
-            className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:scale-95 transition-all"
-            aria-label="Add a friend"
-          >
-            <Plus size={20} strokeWidth={2.5} />
-          </button>
+          <div className="flex items-center gap-2">
+            {session.user.image && (
+              <img
+                src={session.user.image}
+                alt={session.user.name ?? ''}
+                className="h-8 w-8 rounded-full"
+                referrerPolicy="no-referrer"
+              />
+            )}
+            <button
+              type="button"
+              onClick={handleSignOut}
+              className="flex h-10 w-10 items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-all"
+              aria-label="Sign out"
+              title="Sign out"
+            >
+              <LogOut size={18} />
+            </button>
+            <button
+              type="button"
+              onClick={() => setDialogOpen(true)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-500 text-white shadow-sm hover:bg-brand-600 active:scale-95 transition-all"
+              aria-label="Add a friend"
+            >
+              <Plus size={20} strokeWidth={2.5} />
+            </button>
+          </div>
         </div>
 
         {/* Friend list */}

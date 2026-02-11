@@ -1,22 +1,48 @@
 import { createServerFn } from '@tanstack/react-start'
+import { getRequestHeaders } from '@tanstack/react-start/server'
 import { z } from 'zod/v4'
-import { eq, asc, desc } from 'drizzle-orm'
+import { eq, and, asc, desc } from 'drizzle-orm'
 import { db } from './db'
 import { friends, interactions } from './schema'
+import { auth } from './auth'
+
+async function requireUser() {
+  const headers = getRequestHeaders()
+  const session = await auth.api.getSession({ headers })
+  if (!session) throw new Error('Unauthorized')
+  return session.user
+}
+
+export const getSession = createServerFn({ method: 'GET' }).handler(
+  async () => {
+    const headers = getRequestHeaders()
+    const session = await auth.api.getSession({ headers })
+    return session
+  },
+)
 
 export const getFriends = createServerFn({ method: 'GET' }).handler(
   async () => {
+    const user = await requireUser()
+
     const allFriends = db
       .select()
       .from(friends)
+      .where(eq(friends.userId, user.id))
       .orderBy(asc(friends.lastContactedAt))
       .all()
 
-    const recentInteractions = db
-      .select()
-      .from(interactions)
-      .orderBy(desc(interactions.occurredAt))
-      .all()
+    const friendIds = allFriends.map((f) => f.id)
+
+    const recentInteractions =
+      friendIds.length > 0
+        ? db
+            .select()
+            .from(interactions)
+            .orderBy(desc(interactions.occurredAt))
+            .all()
+            .filter((i) => i.friendId && friendIds.includes(i.friendId))
+        : []
 
     const interactionsByFriend = new Map<string, typeof recentInteractions>()
     for (const i of recentInteractions) {
@@ -41,10 +67,12 @@ const addFriendSchema = z.object({
 export const addFriend = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) => addFriendSchema.parse(data))
   .handler(async ({ data }) => {
+    const user = await requireUser()
     const id = crypto.randomUUID()
     db.insert(friends)
       .values({
         id,
+        userId: user.id,
         name: data.name,
         frequencyDays: data.frequencyDays,
       })
@@ -62,8 +90,18 @@ const logInteractionSchema = z.object({
 export const logInteraction = createServerFn({ method: 'POST' })
   .inputValidator((data: unknown) => logInteractionSchema.parse(data))
   .handler(async ({ data }) => {
+    const user = await requireUser()
     const occurredAt = data.occurredAt || new Date().toISOString()
     const id = crypto.randomUUID()
+
+    // Verify the friend belongs to this user
+    const friend = db
+      .select()
+      .from(friends)
+      .where(and(eq(friends.id, data.friendId), eq(friends.userId, user.id)))
+      .get()
+
+    if (!friend) throw new Error('Friend not found')
 
     // Single transaction: insert interaction + update last_contacted_at
     db.transaction((tx) => {
