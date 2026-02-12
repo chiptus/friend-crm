@@ -4,6 +4,10 @@
   "compatibility_date": "2026-02-11",
   "compatibility_flags": ["nodejs_compat"],
   "main": "@tanstack/react-start/server-entry",
+  "vars": {
+    "GOOGLE_CLIENT_ID": "995022572618-fggsq0uukphas3sutdslf5lprijo0lkl.apps.googleusercontent.com",
+    "BETTER_AUTH_URL": "https://friend-crm.chiptus.workers.dev"
+  },
   "d1_databases": [
     {
       "binding": "DB",
