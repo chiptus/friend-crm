@@ -12,7 +12,8 @@
     {
       "binding": "DB",
       "database_name": "friend-crm-db",
-      "database_id": "305bc28e-adcd-47f3-80d0-4a5756b3a4c7"
+      "database_id": "305bc28e-adcd-47f3-80d0-4a5756b3a4c7",
+      "migrations_dir": "drizzle"
     }
   ]
 }
